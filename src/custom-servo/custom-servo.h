@@ -41,4 +41,37 @@ class CustomServo {
         Servo *servo;
 };
 
+class CoupledServo {
+
+    public:
+
+        CoupledServo(int pin_servo1, int pin_servo2, int start_pos, bool invert_direction, int offset);
+
+        void enable();
+        void disable();
+
+        void moveTo(int pos, unsigned long time);
+        void moveTo(int pos);
+
+        void loop();
+
+        bool getEnabled();
+        bool getTransition();
+
+        int getCurrentPos();
+    
+    private:
+
+        int convertPos(int pos);
+
+        int pin_servo1, pin_servo2;
+
+        bool invert_direction;
+        int offset;
+
+        CustomServo *servo1;
+        CustomServo *servo2;
+};
+
+
 #endif

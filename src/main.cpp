@@ -3,13 +3,19 @@
 #include "custom-motor/custom-motor.h"
 #include "configuration.h"
 
-CustomServo servo_falltuer(SERVO_PIN_FALLTUER, SERVO_POS_FALLTUER_ZU);
-CustomServo servo_ausschieber(SERVO_PIN_AUSSCHIEBER, SERVO_POS_AUSSCHIEBER_NORMAL);
+CustomServo servo_falltuer(SERVO_FALLTUER_PIN, SERVO_FALLTUER_POS_ZU);
+CoupledServo servo_ausschieber(SERVO_AUSSCHIEBER_PIN1, SERVO_AUSSCHIEBER_PIN2, SERVO_AUSSCHIEBER_POS_NORMAL, true, 0);
 
 CustomMotor motor_kette(MOTOR_KETTE_PIN_DIRECTION, MOTOR_KETTE_PIN_BRAKE, MOTOR_KETTE_PIN_SPEED);
 CustomMotor motor_band(MOTOR_BAND_PIN_DIRECTION, MOTOR_BAND_PIN_BRAKE, MOTOR_BAND_PIN_SPEED);
 
 bool button_pressed = false;
+
+bool switch_falltuer_pressed = false;
+bool switch_ausschieber_pressed = false;
+
+unsigned long debounce_switch_falltuer = 0;
+unsigned long debounce_switch_ausschieber = 0;
 
 void setup() {
 
@@ -28,14 +34,72 @@ void setup() {
   motor_kette.move(0);
   motor_band.move(0);
 
+  #ifdef TEST_SWITCHES
+
+  Serial.println("Initializing switches");
+  pinMode(SWITCH_KETTE_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_BAND_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_KETTE_REVERSE_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_BAND_REVERSE_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_FALLTUER_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_AUSSCHIEBER_PIN, INPUT_PULLUP);
+  
+  #else // TEST_SWITCHES false
   // initialize button
   pinMode(BUTTON_PIN, INPUT_PULLUP);
 
-  Serial.println("Waiting for button press...");
+  #endif // TEST_SWITCHES
+
+  Serial.println("Starting loop!");
 
 }
 
 void loop() {
+
+  #ifdef TEST_SWITCHES
+
+  if (digitalRead(SWITCH_KETTE_PIN) == LOW) {
+    motor_kette.move(255);
+  } else {
+    if (digitalRead(SWITCH_KETTE_REVERSE_PIN) == LOW) {
+      motor_kette.move(-255);
+    } else {
+      motor_kette.move(0);
+    }
+  }
+
+  if (digitalRead(SWITCH_BAND_PIN) == LOW) {
+    motor_band.move(255);
+  } else {
+    if (digitalRead(SWITCH_BAND_REVERSE_PIN) == LOW) {
+      motor_band.move(-255);
+    } else {
+      motor_band.move(0);
+    }
+  }
+
+  if (digitalRead(SWITCH_FALLTUER_PIN) == LOW && !switch_falltuer_pressed && millis() - debounce_switch_falltuer > 100) {
+    servo_falltuer.moveTo(SERVO_FALLTUER_POS_OFFEN, SERVO_FALLTUER_SPEED_AUF);
+    switch_falltuer_pressed = true;
+    debounce_switch_falltuer = millis();
+  } else if (digitalRead(SWITCH_FALLTUER_PIN) == HIGH && switch_falltuer_pressed && millis() - debounce_switch_falltuer > 100) {
+    servo_falltuer.moveTo(SERVO_FALLTUER_POS_ZU, SERVO_FALLTUER_SPEED_ZU);
+    switch_falltuer_pressed = false;
+    debounce_switch_falltuer = millis();
+  }
+
+  if (digitalRead(SWITCH_AUSSCHIEBER_PIN) == LOW && !switch_ausschieber_pressed && millis() - debounce_switch_ausschieber > 100) {
+    servo_ausschieber.moveTo(SERVO_AUSSCHIEBER_POS_DRAUSSEN, SERVO_AUSSCHIEBER_SPEED_RAUS);
+    switch_ausschieber_pressed = true;
+    debounce_switch_ausschieber = millis();
+  } else if (digitalRead(SWITCH_AUSSCHIEBER_PIN) == HIGH && switch_ausschieber_pressed && millis() - debounce_switch_ausschieber > 100) {
+    servo_ausschieber.moveTo(SERVO_AUSSCHIEBER_POS_NORMAL, SERVO_AUSSCHIEBER_SPEED_REIN);
+    switch_ausschieber_pressed = false;
+    debounce_switch_ausschieber = millis();
+  }
+
+
+  #else // TEST_SWITCHES false
   
   // check button
   if (!digitalRead(BUTTON_PIN)) {
@@ -48,7 +112,7 @@ void loop() {
 
     // open falltuer
     Serial.println("Opening falltuer");
-    servo_falltuer.moveTo(SERVO_POS_FALLTUER_OFFEN, SERVO_SPEED_FALLTUER_AUF);
+    servo_falltuer.moveTo(SERVO_FALLTUER_POS_OFFEN, SERVO_FALLTUER_SPEED_AUF);
     while(servo_falltuer.getTransition()) {
       servo_falltuer.loop();
       delay(1);
@@ -58,7 +122,7 @@ void loop() {
 
     // move band
     motor_band.move(255);
-    motor_kette.move(100);
+    motor_kette.move(255);
 
     // wait
     delay(20000);
@@ -66,7 +130,7 @@ void loop() {
     Serial.println("Stoppe band und kette. Schließe falltuer...");
 
     // close falltuer
-    servo_falltuer.moveTo(SERVO_POS_FALLTUER_ZU, SERVO_SPEED_FALLTUER_ZU);
+    servo_falltuer.moveTo(SERVO_FALLTUER_POS_ZU, SERVO_FALLTUER_SPEED_ZU);
     while(servo_falltuer.getTransition()) {
       servo_falltuer.loop();
       delay(1);
@@ -75,7 +139,7 @@ void loop() {
     Serial.println("Falltuer geschlossen. Ausschieber raus und rein...");
 
     // ausschieber raus
-    servo_ausschieber.moveTo(SERVO_POS_AUSSCHIEBER_DRAUSSEN, SERVO_SPEED_AUSSCHIEBER_RAUS);
+    servo_ausschieber.moveTo(SERVO_AUSSCHIEBER_POS_DRAUSSEN, SERVO_AUSSCHIEBER_SPEED_RAUS);
     while(servo_ausschieber.getTransition()) {
       servo_ausschieber.loop();
       delay(1);
@@ -85,7 +149,7 @@ void loop() {
     delay(100);
 
     // ausschieber zurück
-    servo_ausschieber.moveTo(SERVO_POS_AUSSCHIEBER_NORMAL, SERVO_SPEED_AUSSCHIEBER_REIN);
+    servo_ausschieber.moveTo(SERVO_AUSSCHIEBER_POS_NORMAL, SERVO_AUSSCHIEBER_SPEED_REIN);
     while(servo_ausschieber.getTransition()) {
       servo_ausschieber.loop();
       delay(1);
@@ -95,4 +159,6 @@ void loop() {
   }
 
   delay(5);
+
+  #endif // TEST_SWITCHES
 }
