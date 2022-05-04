@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.cppdfs": "cpp",
+        "*.cppdfsf": "cpp",
+        "*.cppssad": "cpp"
+    }
+}

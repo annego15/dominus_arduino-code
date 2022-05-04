@@ -1,9 +1,10 @@
 #include "custom-motor.h"
 
-CustomMotor::CustomMotor(int pin_direction, int pin_brake, int pin_speed) {
-  this->pin_direction = pin_direction;
-  this->pin_brake = pin_brake;
-  this->pin_speed = pin_speed;
+CustomMotor::CustomMotor(int pin_direction_, int pin_brake_, int pin_speed_, bool reverse_) {
+  pin_direction = pin_direction_;
+  pin_brake = pin_brake_;
+  pin_speed = pin_speed_;
+  reverse = reverse_;
 
   pinMode(pin_direction, OUTPUT);
   pinMode(pin_brake, OUTPUT);
@@ -13,56 +14,78 @@ CustomMotor::CustomMotor(int pin_direction, int pin_brake, int pin_speed) {
   digitalWrite(pin_direction, LOW);
   analogWrite(pin_speed, 0);
 
-  this->running = false;
-  this->timer_set = false;
-  this->speed = 0;
+  running = false;
+  timer_set = false;
+  speed = 0;
 }
 
 void CustomMotor::move(int speed) {
-    this->setSpeed(speed);
+    setSpeed(speed);
 }
 
 void CustomMotor::move(int speed, unsigned long time) {
-    this->move(speed);
-    this->timer_set = true;
-    this->end_time = millis() + time;
+    move(speed);
+    timer_set = true;
+    end_time = millis() + time;
+}
+
+void CustomMotor::sequence_start(int speed_, unsigned long time_forward_, unsigned long time_backward_) {
+    sequence_running = true;
+    sequence_forward = true;
+    time_forward = time_forward_;
+    time_backward = time_backward_;
+    end_time = millis() + time_forward;
+    move(speed_);
+}
+
+void CustomMotor::sequence_stop() {
+    sequence_running = false;
+    timer_set = false;
+    move(0);
 }
 
 void CustomMotor::loop() {
-    if (this->timer_set) {
-        if (millis() >= this->end_time) {
-            this->timer_set = false;
-            this->move(0);
+    if (timer_set) {
+        if (millis() >= end_time) {
+            timer_set = false;
+            move(0);
         }
+    }
+    if (sequence_running && millis() >= end_time) {
+        sequence_forward = !sequence_forward;
+        end_time = millis() + ((sequence_forward) ? time_forward : time_backward);
+        move(-this->speed);
     }
 }
 
 void CustomMotor::setDirection(bool direction) {
-    digitalWrite(this->pin_direction, direction);
+    digitalWrite(pin_direction, (reverse) ? !direction : direction);
 }
 
 void CustomMotor::setSpeed(int speed) {
+    Serial.print("Setting Speed: ");
+    Serial.println(speed);
     this->speed = speed;
     if (speed > 0) {
-        this->setDirection(true);
+        setDirection(true);
     } else if (speed < 0) {
-        this->setDirection(false);
+        setDirection(false);
     } else {
-        this->setBrake(true);
+        setBrake(true);
     }
-    this->setBrake(false);
-    analogWrite(this->pin_speed, abs(speed));
+    setBrake(false);
+    analogWrite(pin_speed, abs(speed));
 }
 
 void CustomMotor::setBrake(bool brake) {
-    digitalWrite(this->pin_brake, brake);
+    digitalWrite(pin_brake, brake);
 }
 
 bool CustomMotor::getRunning() {
-    return this->running;
+    return running;
 }
 
 int CustomMotor::getSpeed() {
-    return this->speed;
+    return speed;
 }
 

@@ -1,0 +1,28 @@
+#include <Arduino.h>
+#include <Servo.h>
+
+Servo servo1;
+
+int value;
+
+void setup() {
+
+  Serial.begin(9600);
+  servo1.attach(10);
+
+}
+
+void loop() {
+
+  while (Serial.available() == 0) { delay(10); }  
+  
+  value = Serial.readString().toInt();
+
+  if (value >= 0 && value <= 200) {
+    servo1.write(value);
+    Serial.print("Moving servo to ");
+    Serial.println(value);
+  } else {
+    Serial.println("Invalid value");
+  }
+}

@@ -21,6 +21,8 @@ class CustomServo {
         bool getTransition();
 
         int getCurrentPos();
+
+        Servo *servo;
     
     private:
 
@@ -38,7 +40,7 @@ class CustomServo {
 
         bool transition;
 
-        Servo *servo;
+        
 };
 
 class CoupledServo {
@@ -59,6 +61,9 @@ class CoupledServo {
         bool getTransition();
 
         int getCurrentPos();
+
+        CustomServo *servo1;
+        CustomServo *servo2;
     
     private:
 
@@ -69,8 +74,7 @@ class CoupledServo {
         bool invert_direction;
         int offset;
 
-        CustomServo *servo1;
-        CustomServo *servo2;
+
 };
 
 
