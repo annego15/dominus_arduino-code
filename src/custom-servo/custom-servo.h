@@ -12,8 +12,9 @@ class CustomServo {
         void enable();
         void disable();
 
-        void moveTo(int pos, unsigned long time);
         void moveTo(int pos);
+        void moveTo(int pos, unsigned long time);
+        void moveTo(int pos, unsigned long time, bool wait);
 
         void loop();
 
@@ -52,8 +53,9 @@ class CoupledServo {
         void enable();
         void disable();
 
-        void moveTo(int pos, unsigned long time);
         void moveTo(int pos);
+        void moveTo(int pos, unsigned long time);
+        void moveTo(int pos, unsigned long time, bool wait);
 
         void loop();
 

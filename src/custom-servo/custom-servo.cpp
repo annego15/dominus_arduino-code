@@ -8,17 +8,28 @@ CustomServo::CustomServo(int pin_, int start_pos_) {
 }
 
 void CustomServo::enable() {
-  enabled = true;
-  Serial.print("Enabling servo on pin ");
-  Serial.println(pin);
-  servo->attach(pin);
-  servo->write(currentPos);
+  if (!enabled) {
+    enabled = true;
+    Serial.print("Enabling servo on pin ");
+    Serial.println(pin);
+    servo->attach(pin);
+    servo->write(currentPos);
+  }
 }
 
 void CustomServo::disable() {
-  Serial.print("Disabling servo");
+  Serial.println("Disabling servo");
   enabled = false;
   servo->detach();
+}
+
+void CustomServo::moveTo(int pos) {
+  if (enabled) {
+    Serial.print("Moving servo to specific pos ");
+      Serial.println(pos);
+    servo->write(pos);
+    currentPos = pos;
+  }
 }
 
 void CustomServo::moveTo(int pos, unsigned long time) {
@@ -31,12 +42,11 @@ void CustomServo::moveTo(int pos, unsigned long time) {
   }
 }
 
-void CustomServo::moveTo(int pos) {
-  if (enabled) {
-    Serial.print("Moving servo to specific pos ");
-      Serial.println(pos);
-    servo->write(pos);
-    currentPos = pos;
+void CustomServo::moveTo(int pos, unsigned long time, bool wait) {
+  moveTo(pos, time);
+  while(wait && getTransition()) {
+    this->loop();
+    delay(1);
   }
 }
 
@@ -102,14 +112,22 @@ void CoupledServo::disable() {
   servo2->disable();
 }
 
+void CoupledServo::moveTo(int pos) {
+  servo1->moveTo(pos);
+  servo2->moveTo(convertPos(pos));
+}
+
 void CoupledServo::moveTo(int pos, unsigned long time) {
   servo1->moveTo(pos, time);
   servo2->moveTo(convertPos(pos), time);
 }
 
-void CoupledServo::moveTo(int pos) {
-  servo1->moveTo(pos);
-  servo2->moveTo(convertPos(pos));
+void CoupledServo::moveTo(int pos, unsigned long time, bool wait) {
+  moveTo(pos, time);
+  while(wait && getTransition()) {
+    this->loop();
+    delay(1);
+  }
 }
 
 void CoupledServo::loop() {
