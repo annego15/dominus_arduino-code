@@ -18,10 +18,10 @@ D0 | RX | -
 D1 | TX | -
 D2 | DIAG1 TMC | INPUT_PULLUP
 ~D3 | Motor Kette Speed | OUTPUT
-D4 | | -
+D4 | ARM SYSTEM | INPUT_PULLUP
 ~D5 | Servo Falltür | OUTPUT
 ~D6 | Servo Ausschieber 1 | OUTPUT
-D7 | | -
+D7 | TEST_BUTTON | -
 D8 | Motor Band brake | OUTPUT
 ~D9 | (Motor Kette brake) / SPI MISO | OUTPUT
 ~D10 | Servo Ausschieber 2 | OUTPUT

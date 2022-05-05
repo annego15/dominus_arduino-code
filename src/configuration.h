@@ -1,5 +1,9 @@
 #pragma once
 
+#define THRESHOLD_FALL 40
+
+#define ARM_SYTEM_PIN 4
+
 #define SERVO_FALLTUER_PIN 10
 #define SERVO_AUSSCHIEBER_PIN1 5
 #define SERVO_AUSSCHIEBER_PIN2 6

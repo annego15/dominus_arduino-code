@@ -66,7 +66,7 @@ void CustomMotor::setDirection(bool direction) {
 }
 
 void CustomMotor::setSpeed(int speed) {
-    Serial.print("Setting Speed: ");
+    //Serial.print("Setting Speed: ");
     Serial.println(speed);
     this->speed = speed;
     if (speed > 0) {

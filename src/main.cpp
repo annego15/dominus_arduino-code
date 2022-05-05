@@ -2,19 +2,27 @@
 #include "custom-motor/custom-motor.h"
 #include "custom-servo/custom-servo.h"
 #include "custom-stepper/custom-stepper.h"
+#include <Wire.h>
+#include <LSM303.h>
+
+LSM303 accel;
 
 CustomMotor motor_band(MOTOR_KETTE_PIN_DIRECTION, MOTOR_KETTE_PIN_BRAKE, MOTOR_KETTE_PIN_SPEED, true);
 
 CustomServo servo_falltuer(SERVO_FALLTUER_PIN, SERVO_FALLTUER_POS_ZU);
 CoupledServo servo_ausschieber(SERVO_AUSSCHIEBER_PIN1, SERVO_AUSSCHIEBER_PIN2, SERVO_AUSSCHIEBER_POS_NORMAL, true, -5);
 
-bool button_pressed = false;
+bool start = false;
+unsigned long last_fall = 0;
 
 bool switch_falltuer_pressed = false;
 bool switch_ausschieber_pressed = false;
 
 unsigned long debounce_switch_falltuer = 0;
 unsigned long debounce_switch_ausschieber = 0;
+
+float a[100];
+int i = 0;
 
 
 void ausschieben() {
@@ -42,6 +50,7 @@ void ausschieben() {
 void setup() {
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(ARM_SYTEM_PIN, INPUT_PULLUP);
 
   // Setup serial
   Serial.begin(9600);
@@ -59,6 +68,13 @@ void setup() {
   Serial.println("Initializing band motor");
   motor_band.move(0);
 
+  // initialize accelerometer
+  Serial.println("Initializing accelerometer");
+  Wire.begin();
+  accel.init();
+  accel.enableDefault();
+  accel.writeAccReg(LSM303::CTRL_REG1_A, 0x67);
+
 
   // intialize stepper driver
   Serial.println("Initializing stepper driver");
@@ -75,6 +91,8 @@ void setup() {
 
   Serial.println("Matilde Prototype v0.1 started");
 
+  last_fall = millis();
+
 
 }
 
@@ -84,11 +102,36 @@ void loop() {
 
   // check button
   if (!digitalRead(BUTTON_PIN)) {
-    button_pressed = true;
+    start = true;
   }
 
-  if(button_pressed) {
-    button_pressed = false;
+  // check accel
+
+  accel.readAcc();
+  float val = abs(accel.a.z - 15695.0);
+  if (val < 10000) {
+    a[i] = sqrt(val);
+  } else {
+    a[i] = 0;
+  }
+  float sum = 0;
+  for (int j = 0; j < 100; j++) {
+      sum += a[j];
+  }
+  //if (i%20 == 0) Serial.println(sum/100);
+  i = (i+1) % 100;
+
+  if (sum/100 > THRESHOLD_FALL && !digitalRead(ARM_SYTEM_PIN) && millis() > (last_fall + 2000)) {
+    Serial.println("Fall detected");
+    start = true;
+  }
+
+  if(start) {
+    start = false;
+
+    for (int i = 0; i < 100; i++) {
+      a[i] = 0;
+    }
 
     Serial.println("Button pressed. Initiating sequence...");
 
@@ -157,9 +200,12 @@ void loop() {
     delay(500);
 
     motor_band.sequence_stop();
+
+    last_fall = millis();
+
   }
 
-  delay(5);
+  delay(1);
 
 }
 
