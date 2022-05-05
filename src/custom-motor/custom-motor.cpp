@@ -44,7 +44,7 @@ void CustomMotor::sequence_stop() {
     move(0);
 }
 
-void CustomMotor::loop() {
+bool CustomMotor::loop() {
     if (timer_set) {
         if (millis() >= end_time) {
             timer_set = false;
@@ -55,7 +55,10 @@ void CustomMotor::loop() {
         sequence_forward = !sequence_forward;
         end_time = millis() + ((sequence_forward) ? time_forward : time_backward);
         move(-this->speed);
+        return true;
     }
+
+    return false;
 }
 
 void CustomMotor::setDirection(bool direction) {

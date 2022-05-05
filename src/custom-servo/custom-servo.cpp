@@ -48,6 +48,7 @@ void CustomServo::moveTo(int pos, unsigned long time, bool wait) {
     this->loop();
     delay(1);
   }
+  Serial.println("Done moving single");
 }
 
 
@@ -58,8 +59,8 @@ void CustomServo::loop() {
       transition = false;
       servo->write(end_pos);
       currentPos = end_pos;
-      /*Serial.print("Moving servo to end ");
-      Serial.println(currentPos);*/
+      Serial.print("Moving servo to end ");
+      Serial.println(currentPos);
     } else {
       /*Serial.print("start pos: ");
       Serial.print(start_pos);
@@ -73,8 +74,8 @@ void CustomServo::loop() {
       Serial.println(start_time);*/
       int current_pos = start_pos + (end_pos - start_pos) * (float(current_time) - start_time) / float(end_time - start_time);
       servo->write(current_pos);
-      //Serial.print("Moving servo to ");
-      //Serial.println(currentPos);
+      Serial.print("Moving servo to ");
+      Serial.println(currentPos);
       currentPos = current_pos;
     }
   }
@@ -127,7 +128,9 @@ void CoupledServo::moveTo(int pos, unsigned long time, bool wait) {
   while(wait && getTransition()) {
     this->loop();
     delay(1);
+    Serial.println("loop");
   }
+  Serial.println("Done moving");
 }
 
 void CoupledServo::loop() {

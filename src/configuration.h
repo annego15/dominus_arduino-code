@@ -31,7 +31,7 @@
 #define SW_SCK           A4 // Software Slave Clock (SCK)
 
 #define STALL_PIN        2
-#define STALL_VALUE      24 // [-64..63]
+#define STALL_VALUE      22 // [-64..63]
 
 #define R_SENSE 0.11f   // don't change
 

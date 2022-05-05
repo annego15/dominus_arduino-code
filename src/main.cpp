@@ -1,4 +1,3 @@
-
 #include "configuration.h"
 #include "custom-motor/custom-motor.h"
 #include "custom-servo/custom-servo.h"
@@ -47,6 +46,7 @@ void setup() {
   // Setup serial
   Serial.begin(9600);
 
+  delay(50);
 
   Serial.println("Starting Matilde Prototype v0.1");
   
@@ -62,21 +62,20 @@ void setup() {
 
   // intialize stepper driver
   Serial.println("Initializing stepper driver");
-
-  pinMode(STALL_PIN, INPUT_PULLUP);
-  pinMode(STEP_PIN, OUTPUT);
-
   stepper_setup();
+  Serial.println("Stepper driver initialized");
 
-  Serial.println("Falltuer geschlossen. Ausschieber raus und rein...");
+  Serial.println("Ausschieber raus und rein...");
 
   ausschieben();
 
   delay(500);
 
-  servo_ausschieber.disable();
-
   //motor_band.sequence_start(255, 2000, 1000);
+
+  Serial.println("Matilde Prototype v0.1 started");
+
+
 }
 
 void loop() {
@@ -107,19 +106,35 @@ void loop() {
     // move band
     motor_band.sequence_start(255, 3500, 1000);
 
-    stepper_move(50000, 50);
+    delay(1000);
+
+    stepper_move(5000, 200);
 
      Serial.println("starting");
 
     // wait
-    while(stepper_getSteps() != 0) {
+    while(stepper_getSteps() != 0) { 
       motor_band.loop();
       stepper_loop();
       delay(100);
       Serial.println(stepper_getSteps());
     }
 
-    motor_band.sequence_stop();
+    stepper_move(45000, 200);
+
+    while(stepper_getSteps() != 0) { 
+      if(motor_band.loop()) {
+        if (motor_band.getSpeed() < 0) {
+          delay(500);
+          stepper_setSpeed(250);
+        } else {
+          stepper_setSpeed(90);
+        }
+      }
+      stepper_loop();
+      delay(100);
+      Serial.println(stepper_getSteps());
+    }
 
     stepper_disable();
     
@@ -138,6 +153,10 @@ void loop() {
     ausschieben();
 
     Serial.println("Sequence done. Waiting for another button press...");
+
+    delay(500);
+
+    motor_band.sequence_stop();
   }
 
   delay(5);

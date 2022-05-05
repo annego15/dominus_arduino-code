@@ -11,7 +11,10 @@ volatile uint8_t speed = 50;
 
 unsigned long last_stall_time = 0;
 
-ISR(TIMER2_OVF_vect){
+//ISR(TIMER2_OVF_vect){
+
+
+ISR(TIMER2_COMPA_vect) {
   //STEP_PORT ^= 1 << STEP_BIT_POS;
   if (stepper_getDirection()) {
     step_count++;
@@ -23,11 +26,11 @@ ISR(TIMER2_OVF_vect){
     running = false;
     stepper_stop();
   }
-  OCR2A = speed;
 }
 
 void stepper_setup() {
     pinMode(STEP_PIN, OUTPUT);
+    pinMode(STALL_PIN, INPUT_PULLUP);
     SPI.begin(); 
     driver.begin();
     driver.shaft(reverse);
@@ -57,18 +60,40 @@ void stepper_setup() {
     attachInterrupt(digitalPinToInterrupt(STALL_PIN), stallISR, FALLING);
 
 
-    /*cli();//stop interrupts
+    noInterrupts(); //stop interrupts
+
+    TCCR2A = 0;// set entire TCCR1A register to 0
+    TCCR2B = 0;// same for TCCR1B
+    TCNT2  = 0;//initialize counter value to 0
+    OCR2A = 200;// = (16*10^6) / (1*1024) - 1 (must be <65536)
+    // turn on CTC mode
+    TCCR2A|=(1<<WGM01);
+    // Set CS11 bits for 8 prescaler
+    TCCR2B|=(1<<CS21);    //Set the prescale 1/64 clock
+    TCCR2B|=(1<<CS20);
+    // enable timer compare interrupt
+    //TIMSK1 |= (1 << OCIE1A);
+
+    /*TCCR0A = 0;
+    TCCR0B = 0;
+    TCCR0A|=(1<<WGM01); 
+    OCR0A=5;
+    TCCR0B |= (1 << CS01); //| (1 << CS00);// | (1 << CS10);
+    TCNT0 = 0;
+
+    
+
     TCCR2A = 0;// set entire TCCR1A register to 0
     TCCR2B = 0;// same for TCCR1B
     TCNT2  = speed;//initialize counter value to 0
     //OCR2A = 200;// = (16*10^6) / (1*1024) - 1 (must be <65536) // working speed: 200
     // turn on CTC mode
-    TCCR2B |= (1 << WGM21);
+    //TCCR2B |= (1 << WGM21);
     // Set CS11 bits for 8 prescaler
     TCCR2B |= (1 << CS21) | (1 << CS20);// | (1 << CS10);
     // enable timer compare interrupt
-    //TIMSK2 |= (1 << OCIE2A);
-    sei();//allow interrupts*/
+    //TIMSK2 |= (1 << OCIE2A);*/
+    interrupts(); //allow interrupts
 
 
     Serial.print("Driver connection test: ");
@@ -90,7 +115,7 @@ void stepper_disable() {
 }
 
 void stepper_loop() {
-    if (stepper_getDirection() && (millis() - last_stall_time > 1000)) {
+    if (stepper_getDirection() && (millis() - last_stall_time > 1500)) {
         stepper_setDirection(false);
         last_stall_time = millis();
     }
@@ -111,36 +136,43 @@ void stepper_setDirection(bool dir) {
 }
 
 void stallISR() {
-  if (!stepper_getDirection() && millis() - last_stall_time > 500) {
+  if (!stepper_getDirection() && millis() - last_stall_time > 50) {
     stepper_setDirection(true);
     last_stall_time = millis();
   }
 }
 
 void stepper_move(long steps, int speed_) {
-    stepper_enable();
-    speed = speed_;
-    OCR2A = speed;
-    cli();
-    TIMSK2 |= (1 << OCIE2A);
-    sei();
     if (steps == 0) {
         return;
     }
+    speed = speed_;
+    noInterrupts();
+    step_count = steps;
+    OCR2A = speed; // set compare to speed
+    TIMSK2|=(1<<OCIE2A); // enable timer interrupts
+    interrupts();
+    stepper_enable();
     if (steps > 0) {
         stepper_setDirection(true);
     } else {
         stepper_setDirection(false);
     }
-    step_count = steps;
+}
+
+void stepper_setSpeed(int speed_) {
+    speed = speed_;
+    noInterrupts();
+    OCR2A = speed; // set compare to speed
+    interrupts();
 }
 
 void stepper_stop() {
     step_count = 0;
     stepper_disable();
-    cli();
-    TIMSK2 = 0;
-    sei();
+    noInterrupts();
+    TIMSK2^=(1<<OCIE2A); // disable timer interrupts
+    interrupts();
 }
 
 

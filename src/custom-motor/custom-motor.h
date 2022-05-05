@@ -12,7 +12,7 @@ class CustomMotor {
         void sequence_start(int speed, unsigned long time_forward, unsigned long time_backward);
         void sequence_stop();
 
-        void loop();
+        bool loop();
 
         bool getRunning();
 
