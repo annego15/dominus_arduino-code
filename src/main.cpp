@@ -50,7 +50,7 @@ void ausschieben() {
 void setup() {
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  pinMode(ARM_SYTEM_PIN, INPUT_PULLUP);
+  //pinMode(ARM_SYTEM_PIN, INPUT_PULLUP);
 
   // Setup serial
   Serial.begin(9600);
@@ -58,6 +58,11 @@ void setup() {
   delay(50);
 
   Serial.println("Starting Matilde Prototype v0.1");
+
+  // intialize stepper driver
+  Serial.println("Initializing stepper driver");
+  stepper_setup();
+  Serial.println("Stepper driver initialized");
   
   // initialize servos
   Serial.println("Initializing servos");
@@ -74,12 +79,6 @@ void setup() {
   accel.init();
   accel.enableDefault();
   accel.writeAccReg(LSM303::CTRL_REG1_A, 0x67);
-
-
-  // intialize stepper driver
-  Serial.println("Initializing stepper driver");
-  stepper_setup();
-  Serial.println("Stepper driver initialized");
 
   Serial.println("Ausschieber raus und rein...");
 
@@ -102,6 +101,7 @@ void loop() {
 
   // check button
   if (!digitalRead(BUTTON_PIN)) {
+    Serial.println("Button pressed. Initiating sequence...");
     start = true;
   }
 
@@ -118,11 +118,14 @@ void loop() {
   for (int j = 0; j < 100; j++) {
       sum += a[j];
   }
-  //if (i%20 == 0) Serial.println(sum/100);
+  if (i%20 == 0) Serial.println(sum/100);
   i = (i+1) % 100;
 
-  if (sum/100 > THRESHOLD_FALL && !digitalRead(ARM_SYTEM_PIN) && millis() > (last_fall + 2000)) {
+
+  // && !digitalRead(ARM_SYTEM_PIN)
+  if (sum/100 > THRESHOLD_FALL && millis() > (last_fall + 2000)) {
     Serial.println("Fall detected");
+    delay(500);
     start = true;
   }
 
@@ -132,8 +135,6 @@ void loop() {
     for (int i = 0; i < 100; i++) {
       a[i] = 0;
     }
-
-    Serial.println("Button pressed. Initiating sequence...");
 
     servo_falltuer.enable();
 
@@ -179,6 +180,8 @@ void loop() {
       Serial.println(stepper_getSteps());
     }
 
+    motor_band.move(255);
+
     stepper_disable();
     
 
@@ -197,11 +200,11 @@ void loop() {
 
     Serial.println("Sequence done. Waiting for another button press...");
 
-    delay(500);
-
-    motor_band.sequence_stop();
+    motor_band.move(0);
 
     last_fall = millis();
+
+    Wire.begin();
 
   }
 

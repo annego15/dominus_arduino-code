@@ -1,6 +1,6 @@
 #pragma once
 
-#define THRESHOLD_FALL 40
+#define THRESHOLD_FALL 35
 
 #define ARM_SYTEM_PIN 4
 
@@ -28,14 +28,14 @@
 #define MOTOR_BAND_PIN_BRAKE 8
 #define MOTOR_BAND_PIN_SPEED 11
 
-#define STEP_PIN         A1 // Step
-#define CS_PIN           A3 // Chip select
-#define SW_MOSI          A5 // Software Master Out Slave In (MOSI)
-#define SW_MISO          A2 // Software Master In Slave Out (MISO)
-#define SW_SCK           A4 // Software Slave Clock (SCK)
+#define STEP_PIN         4 // Step
+#define CS_PIN           A1 // Chip select
+#define SW_MOSI          A3 // Software Master Out Slave In (MOSI)
+#define SW_MISO          A0 // Software Master In Slave Out (MISO)
+#define SW_SCK           A2 // Software Slave Clock (SCK)
 
 #define STALL_PIN        2
-#define STALL_VALUE      22 // [-64..63]
+#define STALL_VALUE      24 // [-64..63]
 
 #define R_SENSE 0.11f   // don't change
 

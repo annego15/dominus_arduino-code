@@ -139,6 +139,7 @@ void stallISR() {
   if (!stepper_getDirection() && millis() - last_stall_time > 50) {
     stepper_setDirection(true);
     last_stall_time = millis();
+    Serial.println("Stall!");
   }
 }
 
