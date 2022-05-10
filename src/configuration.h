@@ -14,7 +14,7 @@
 #define SERVO_FALLTUER_SPEED_AUF 500
 #define SERVO_FALLTUER_SPEED_ZU  1000
 
-#define SERVO_AUSSCHIEBER_POS_NORMAL 5
+#define SERVO_AUSSCHIEBER_POS_NORMAL 0
 #define SERVO_AUSSCHIEBER_POS_DRAUSSEN 180
 
 #define SERVO_AUSSCHIEBER_SPEED_RAUS 1000
@@ -34,8 +34,9 @@
 #define SW_MISO          A0 // Software Master In Slave Out (MISO)
 #define SW_SCK           A2 // Software Slave Clock (SCK)
 
-#define STALL_PIN        2
-#define STALL_VALUE      24 // [-64..63]
+#define STALL_PIN           2
+#define STALL_VALUE         24 // [-64..63]
+#define STALL_VALUE_FAST    29 // [-64..63]
 
 #define R_SENSE 0.11f   // don't change
 

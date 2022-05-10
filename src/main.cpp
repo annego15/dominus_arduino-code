@@ -123,7 +123,7 @@ void loop() {
 
 
   // && !digitalRead(ARM_SYTEM_PIN)
-  if (sum/100 > THRESHOLD_FALL && millis() > (last_fall + 2000)) {
+  if (sum/100 > THRESHOLD_FALL && millis() > (last_fall + 1000)) {
     Serial.println("Fall detected");
     delay(500);
     start = true;
@@ -152,7 +152,9 @@ void loop() {
 
     delay(1000);
 
-    stepper_move(5000, 200);
+    stepper_setSGT(STALL_VALUE);
+
+    stepper_move(3000, 200);
 
      Serial.println("starting");
 
@@ -164,7 +166,9 @@ void loop() {
       Serial.println(stepper_getSteps());
     }
 
-    stepper_move(45000, 200);
+    stepper_setSGT(STALL_VALUE_FAST);
+
+    stepper_move(39000, 200);
 
     while(stepper_getSteps() != 0) { 
       if(motor_band.loop()) {

@@ -161,6 +161,10 @@ void stepper_move(long steps, int speed_) {
     }
 }
 
+void stepper_setSGT(int8_t sgt) {
+    driver.sgt(sgt);
+}
+
 void stepper_setSpeed(int speed_) {
     speed = speed_;
     noInterrupts();
