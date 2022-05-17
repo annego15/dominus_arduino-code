@@ -12,6 +12,9 @@ void stepper_setup();
 void stepper_enable();
 void stepper_disable();
 
+void enable_stall_detection();
+void disable_stall_detection();
+
 void stepper_loop();
 
 long stepper_getSteps();

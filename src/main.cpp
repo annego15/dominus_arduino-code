@@ -44,7 +44,7 @@ void loop() {
 
     Serial.println("Falltuer offen. Bewege band und kette für 20 sekunden...");
 
-    stepper_setSGT(40);
+    disable_stall_detection();
 
     // first value: steps, second value speed (lower means faster)
     stepper_move(3000, 200);
