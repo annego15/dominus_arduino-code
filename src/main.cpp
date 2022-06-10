@@ -58,6 +58,8 @@ void loop() {
       Serial.println(stepper_getSteps());
     }
 
+    // move faster
+    // first value: steps, second value speed (lower means faster)
     stepper_move(39000, 100);
 
     while(stepper_getSteps() != 0) { 
