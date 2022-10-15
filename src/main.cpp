@@ -176,7 +176,7 @@ void loop() {
           delay(500);
           stepper_setSpeed(250);
         } else {
-          stepper_setSpeed(90);
+          stepper_setSpeed(110);
         }
       }
       stepper_loop();
