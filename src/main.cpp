@@ -84,7 +84,7 @@ void setup() {
 
   ausschieben();
 
-  delay(500);
+  //delay(500);
 
   //motor_band.sequence_start(255, 2000, 1000);
 
