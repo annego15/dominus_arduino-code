@@ -21,6 +21,8 @@ bool switch_ausschieber_pressed = false;
 unsigned long debounce_switch_falltuer = 0;
 unsigned long debounce_switch_ausschieber = 0;
 
+bool deactivated_sensor = false;
+
 float a[100];
 int i = 0;
 
@@ -44,6 +46,24 @@ void ausschieben() {
   delay(500);
 
   servo_ausschieber.disable();
+}
+
+int measure() {
+  digitalWrite(SENSOR_PIN, LOW);
+  pinMode(SENSOR_PIN, INPUT);
+  int measurement = analogRead(SENSOR_PIN);
+  pinMode(SENSOR_PIN, OUTPUT);
+  digitalWrite(SENSOR_PIN, HIGH);
+  return measurement;
+}
+
+void setup_sensor() {
+  pinMode(SENSOR_PIN, OUTPUT);
+  digitalWrite(SENSOR_PIN, HIGH);
+}
+
+void disable_sensor() {
+  digitalWrite(SENSOR_PIN, LOW);
 }
 
 
@@ -88,6 +108,20 @@ void setup() {
 
   //motor_band.sequence_start(255, 2000, 1000);
 
+  deactivated_sensor = true;
+
+  for (int i = 0; i < 10; i++) {
+    if (analogRead(SENSOR_PIN) < 1000) {
+      deactivated_sensor = false;
+    }
+  }
+
+  if (deactivated_sensor) {
+    Serial.println("Sensor deactivated");
+  } else {
+    Serial.println("Sensor activated");
+  }
+
   Serial.println("Matilde Prototype v0.1 started");
 
   last_fall = millis();
@@ -100,10 +134,10 @@ void loop() {
 
 
   // check button
-  if (!digitalRead(BUTTON_PIN)) {
+  /*if (!digitalRead(BUTTON_PIN)) {
     Serial.println("Button pressed. Initiating sequence...");
     start = true;
-  }
+  }*/
 
   // check accel
 
@@ -150,7 +184,12 @@ void loop() {
     // move band
     motor_band.sequence_start(255, 3500, 1000);
 
-    delay(1000);
+    unsigned long start = millis();
+    setup_sensor();
+    while (millis() < (start + 1000)) {
+      Serial.println(measure());
+      delay(50);
+    }
 
     stepper_setSGT(STALL_VALUE);
 
@@ -163,30 +202,65 @@ void loop() {
       motor_band.loop();
       stepper_loop();
       delay(100);
-      Serial.println(stepper_getSteps());
+      Serial.println(measure());
     }
 
     stepper_setSGT(STALL_VALUE_FAST);
 
-    stepper_move(39000, 200);
+    stepper_move(39000, 100);
 
-    while(stepper_getSteps() != 0) { 
-      if(motor_band.loop()) {
-        if (motor_band.getSpeed() < 0) {
-          delay(500);
-          stepper_setSpeed(250);
-        } else {
-          stepper_setSpeed(110);
+    unsigned long stepper_paused = 0;
+    bool timeout = false;
+
+    while(stepper_getSteps() != 0) {
+      if (deactivated_sensor) {
+        if(motor_band.loop()) {
+          if (motor_band.getSpeed() < 0) {
+            delay(500);
+            stepper_setSpeed(250);
+          } else {
+            stepper_setSpeed(110);
+          }
         }
+      } else {
+        motor_band.loop();
+        int m = measure();
+        if (m > THRESHOLD_EMPTY) {
+          if (!timeout) {
+            if (stepper_getRunning()) {
+              Serial.println("Pausing, because empty");
+              stepper_pause();
+              stepper_paused = millis();
+            }
+            else if (millis() > (stepper_paused + 10000)) {
+              timeout = true;
+              stepper_paused = millis();
+              stepper_resume();
+            }
+          } else { // timeout == true
+            if (millis() > (stepper_paused + 3000)) {
+              timeout = false;
+              stepper_pause();
+              stepper_paused = millis();
+            }
+          }
+        } else if (stepper_getRunning() == false) { // full and not running
+          stepper_resume();
+        }
+
+        Serial.print(m);
+        Serial.print(" ");
       }
-      stepper_loop();
-      delay(100);
       Serial.println(stepper_getSteps());
+      stepper_loop();
+      delay(50);
+      
     }
 
     motor_band.move(255);
 
     stepper_disable();
+    disable_sensor();
     
 
     servo_ausschieber.enable();

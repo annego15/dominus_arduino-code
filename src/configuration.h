@@ -35,14 +35,18 @@
 #define SW_SCK           A1 // Software Slave Clock (SCK)
 
 #define STALL_PIN           2
-#define STALL_VALUE         24 // [-64..63]
-#define STALL_VALUE_FAST    29 // [-64..63]
+#define STALL_VALUE         22 // [-64..63]
+#define STALL_VALUE_FAST    27 // [-64..63]
 
 #define R_SENSE 0.11f   // don't change
 
 #define STEPPER_CURRENT 800 // [0..1000 mA]
 
 #define REVERSE_STEPPER true
+
+#define SENSOR_PIN A3
+
+#define THRESHOLD_EMPTY 750
 
 //#define TEST_SWITCHES
 
