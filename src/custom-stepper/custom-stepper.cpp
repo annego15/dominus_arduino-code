@@ -143,6 +143,10 @@ void stepper_setDirection(bool dir) {
     driver.shaft(direction);
 }
 
+bool stepper_getRunning() {
+    return running;
+}
+
 void stallISR() {
   if (!stepper_getDirection() && millis() - last_stall_time > 50) {
     stepper_setDirection(true);
@@ -185,6 +189,20 @@ void stepper_stop() {
     stepper_disable();
     noInterrupts();
     TIMSK2^=(1<<OCIE2A); // disable timer interrupts
+    interrupts();
+}
+
+void stepper_pause() {
+    stepper_disable();
+    noInterrupts();
+    TIMSK2^=(1<<OCIE2A); // disable timer interrupts
+    interrupts();
+}
+
+void stepper_resume() {
+    stepper_enable();
+    noInterrupts();
+    TIMSK2|=(1<<OCIE2A); // enable timer interrupts
     interrupts();
 }
 

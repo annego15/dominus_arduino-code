@@ -29,20 +29,24 @@
 #define MOTOR_BAND_PIN_SPEED 11
 
 #define STEP_PIN         4 // Step
-#define CS_PIN           A1 // Chip select
-#define SW_MOSI          A3 // Software Master Out Slave In (MOSI)
-#define SW_MISO          A0 // Software Master In Slave Out (MISO)
-#define SW_SCK           A2 // Software Slave Clock (SCK)
+#define CS_PIN           A0 // Chip select
+#define SW_MOSI          A2 // Software Master Out Slave In (MOSI)
+#define SW_MISO          7 // Software Master In Slave Out (MISO)
+#define SW_SCK           A1 // Software Slave Clock (SCK)
 
 #define STALL_PIN           2
-#define STALL_VALUE         24 // [-64..63]
-#define STALL_VALUE_FAST    29 // [-64..63]
+#define STALL_VALUE         22 // [-64..63]
+#define STALL_VALUE_FAST    27 // [-64..63]
 
 #define R_SENSE 0.11f   // don't change
 
 #define STEPPER_CURRENT 800 // [0..1000 mA]
 
 #define REVERSE_STEPPER true
+
+#define SENSOR_PIN A3
+
+#define THRESHOLD_EMPTY 750
 
 //#define TEST_SWITCHES
 
@@ -57,7 +61,7 @@
 
 #else // TEST_SWITCHES false
 
-#define BUTTON_PIN 7
+#define BUTTON_PIN 12
 
 #endif // TEST_SWITCHES
 
