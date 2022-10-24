@@ -114,6 +114,14 @@ void stepper_disable() {
     driver.toff(0);
 }
 
+void enable_stall_detection() {
+    driver.diag1_stall(true);
+}
+
+void disable_stall_detection() {
+    driver.diag1_stall(false);
+}
+
 void stepper_loop() {
     if (stepper_getDirection() && (millis() - last_stall_time > 1500)) {
         stepper_setDirection(false);

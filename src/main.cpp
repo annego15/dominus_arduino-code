@@ -1,16 +1,7 @@
 #include "configuration.h"
-#include "custom-motor/custom-motor.h"
-#include "custom-servo/custom-servo.h"
 #include "custom-stepper/custom-stepper.h"
+
 #include <Wire.h>
-#include <LSM303.h>
-
-LSM303 accel;
-
-CustomMotor motor_band(MOTOR_KETTE_PIN_DIRECTION, MOTOR_KETTE_PIN_BRAKE, MOTOR_KETTE_PIN_SPEED, true);
-
-CustomServo servo_falltuer(SERVO_FALLTUER_PIN, SERVO_FALLTUER_POS_ZU);
-CoupledServo servo_ausschieber(SERVO_AUSSCHIEBER_PIN1, SERVO_AUSSCHIEBER_PIN2, SERVO_AUSSCHIEBER_POS_NORMAL, true, -5);
 
 bool start = false;
 unsigned long last_fall = 0;
@@ -66,7 +57,6 @@ void disable_sensor() {
   digitalWrite(SENSOR_PIN, LOW);
 }
 
-
 void setup() {
 
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -77,7 +67,7 @@ void setup() {
 
   delay(50);
 
-  Serial.println("Starting Matilde Prototype v0.1");
+  Serial.println("Starting Speed Control");
 
   // intialize stepper driver
   Serial.println("Initializing stepper driver");
@@ -139,45 +129,9 @@ void loop() {
     start = true;
   }*/
 
-  // check accel
-
-  accel.readAcc();
-  float val = abs(accel.a.z - 15695.0);
-  if (val < 10000) {
-    a[i] = sqrt(val);
-  } else {
-    a[i] = 0;
-  }
-  float sum = 0;
-  for (int j = 0; j < 100; j++) {
-      sum += a[j];
-  }
-  if (i%20 == 0) Serial.println(sum/100);
-  i = (i+1) % 100;
-
-
-  // && !digitalRead(ARM_SYTEM_PIN)
-  if (sum/100 > THRESHOLD_FALL && millis() > (last_fall + 1000)) {
-    Serial.println("Fall detected");
-    delay(500);
-    start = true;
-  }
 
   if(start) {
     start = false;
-
-    for (int i = 0; i < 100; i++) {
-      a[i] = 0;
-    }
-
-    servo_falltuer.enable();
-
-    // open falltuer
-    Serial.println("Opening falltuer");
-    servo_falltuer.moveTo(SERVO_FALLTUER_POS_OFFEN, SERVO_FALLTUER_SPEED_AUF, true);
-
-    delay(100);
-    servo_falltuer.disable();
 
     Serial.println("Falltuer offen. Bewege band und kette für 20 sekunden...");
 
@@ -193,13 +147,13 @@ void loop() {
 
     stepper_setSGT(STALL_VALUE);
 
+    // first value: steps, second value speed (lower means faster)
     stepper_move(3000, 200);
 
      Serial.println("starting");
 
     // wait
     while(stepper_getSteps() != 0) { 
-      motor_band.loop();
       stepper_loop();
       delay(100);
       Serial.println(measure());
@@ -251,38 +205,17 @@ void loop() {
         Serial.print(m);
         Serial.print(" ");
       }
+      
       Serial.println(stepper_getSteps());
       stepper_loop();
       delay(50);
       
     }
 
-    motor_band.move(255);
-
     stepper_disable();
     disable_sensor();
     
-
-    servo_ausschieber.enable();
-    servo_falltuer.enable();
-
-    Serial.println("Stoppe band und kette. Schließe falltuer...");
-
-    // close falltuer
-    servo_falltuer.moveTo(SERVO_FALLTUER_POS_ZU, SERVO_FALLTUER_SPEED_ZU, true);
-    
-
-    Serial.println("Falltuer geschlossen. Ausschieber raus und rein...");
-
-    ausschieben();
-
     Serial.println("Sequence done. Waiting for another button press...");
-
-    motor_band.move(0);
-
-    last_fall = millis();
-
-    Wire.begin();
 
   }
 
